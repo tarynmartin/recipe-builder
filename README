@@ -1,0 +1,2 @@
+to restart the venv, run recipe_env/bin/activate in terminal
+to stop the venv, run deactivate in terminal
