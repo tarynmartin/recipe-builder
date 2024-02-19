@@ -6,12 +6,18 @@ from rest_framework import status
 from .models import *
 from .serializers import *
 
-# create a view for the user
-# create a delete function for admin? is that built into the admin board?
+@api_view(['POST'])
+def register(request):
+    serializer = UserSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET', 'POST', 'PATCH'])
-def user(request):
+def user(request, email):
     if request.method == 'GET':
-        user = CustomUser.objects.filter(email=request.data['email'], password=request.data['password'])
+        user = CustomUser.objects.filter(email=email)
         serializer = UserSerializer(user, many=True)
         return Response(serializer.data)
     elif request.method == 'POST':
@@ -28,14 +34,12 @@ def user(request):
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-#create a view for all recipes
 @api_view(['GET'])
 def recipes(request):
     recipes = Recipe.objects.all()
     serializer = RecipeSerializer(recipes, many=True)
     return Response(serializer.data)
 
-#create a view for a recipe               
 @api_view(['POST'])
 def create_recipe(request):
     serializer = RecipeSerializer(data=request.data)
@@ -45,44 +49,116 @@ def create_recipe(request):
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 @api_view(['GET', 'PATCH', 'DELETE'])
-def recipe(request):
+def recipe(request, recipe_id):
     if request.method == 'GET':
-        recipe = Recipe.objects.get(recipe_id=request.data['recipe_id'])
+        recipe = Recipe.objects.get(recipe_id=recipe_id)
         serializer = RecipeSerializer(recipe)
         return Response(serializer.data)
     elif request.method == 'PATCH':
-        recipe = Recipe.objects.get(recipe_id=request.data['recipe_id'])
+        recipe = Recipe.objects.get(recipe_id=recipe_id)
         serializer = RecipeSerializer(recipe, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     elif request.method == 'DELETE':
-        recipe = Recipe.objects.get(recipe_id=request.data['recipe_id'])
+        recipe = Recipe.objects.get(recipe_id=recipe_id)
         recipe.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+@api_view(['GET', 'POST'])
+def ingredients(request):
+    if request.method == 'GET':
+        ingredients = Ingredients.objects.all()
+        serializer = IngredientSerializer(ingredients, many=True)
+        return Response(serializer.data)
+    elif request.method == 'POST':
+        serializer = IngredientSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# create an ingredient
-# get all ingredients
+@api_view(['GET', 'POST'])
+def user_ingredients(request, user_id):
+    if request.method == 'GET':
+        user_ingredients = UserIngredients.objects.filter(user_id=user_id)
+        serializer = UserIngredientSerializer(user_ingredients, many=True)
+        return Response(serializer.data)
+    elif request.method == 'POST':
+        serializer = UserIngredientSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# USER INGREDIENTS
-# get all ingredients
+@api_view(['GET', 'PATCH', 'DELETE'])
+def user_ingredient(request, user_id, ingredient_id):
+    if request.method == 'GET':
+        user_ingredient = UserIngredients.objects.get(user_id=user_id, ingredient_id=ingredient_id)
+        serializer = UserIngredientSerializer(user_ingredient)
+        return Response(serializer.data)
+    elif request.method == 'PATCH':
+        user_ingredient = UserIngredients.objects.get(user_id=user_id, ingredient_id=ingredient_id)
+        serializer = UserIngredientSerializer(user_ingredient, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':
+        user_ingredient = UserIngredients.objects.get(user_id=user_id, ingredient_id=ingredient_id)
+        user_ingredient.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)                 
 
-# create an ingredient
-# get an ingredient
-# update an ingredient - patch
-# delete an ingredient
+@api_view(['GET'])
+def recipe_ingredients(request, recipe_id):
+    recipe_ingredients = RecipeIngredients.objects.filter(recipe_id=recipe_id)
+    serializer = RecipeIngredientSerializer(recipe_ingredients, many=True)
+    return Response(serializer.data)
 
-# RECIPE INGREDIENTS
-# get all recipe ingredients
+@api_view(['POST', 'PATCH', 'DELETE'])
+def recipe_ingredient(request):
+    if request.method == 'POST':
+        serializer = RecipeIngredientSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'PATCH':
+        recipe_ingredient = RecipeIngredients.objects.get(recipe_id=request.data['recipe_id'], ingredient_id=request.data['ingredient_id'])
+        serializer = RecipeIngredientSerializer(recipe_ingredient, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':
+        recipe_ingredient = RecipeIngredients.objects.get(recipe_id=request.data['recipe_id'], ingredient_id=request.data['ingredient_id'])
+        recipe_ingredient.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
-# create a recipe ingredient
-# update a recipe ingredient - patch
-# delete a recipe ingredient
 
-# RECIPE STEPS
-# get all recipe steps
+@api_view(['GET'])
+def recipe_steps(request, recipe_id):
+    recipe_steps = RecipeSteps.objects.filter(recipe_id=recipe_id)
+    serializer = StepSerializer(recipe_steps, many=True)
+    return Response(serializer.data)
 
-# create a recipe step
-# update a recipe step - patch
-# delete a recipe step
+@api_view(['POST', 'PATCH', 'DELETE'])
+def recipe_step(request):
+    if request.method == 'POST':
+        serializer = StepSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'PATCH':
+        recipe_step = RecipeSteps.objects.get(recipe_id=request.data['recipe_id'], step_number=request.data['step_number'])
+        serializer = StepSerializer(recipe_step, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == 'DELETE':
+        recipe_step = RecipeSteps.objects.get(recipe_id=request.data['recipe_id'], step_number=request.data['step_number'])
+        recipe_step.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
