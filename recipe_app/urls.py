@@ -15,20 +15,22 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, re_path
+from django.urls import path, include
 from recipe_api import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/user/', views.user),
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('api/register/', views.register),
+    path('api/user/<str:email>/', views.user),
     path('api/recipes/', views.recipes),
     path('api/recipe/', views.create_recipe),
     path('api/recipe/<int:recipe_id>/', views.recipe),
-    path('api/ingredients/', views.ingredients_list),
-    path('api/user_ingredients/', views.user_ingredients),
-    path('api/user_ingredient/<int:user_ingredient_id>/', views.user_ingredient),
-    path('api/recipe_ingredients/', views.recipe_ingredients),
+    path('api/ingredients/', views.ingredients),
+    path('api/user_ingredients/<str:user_id>/', views.user_ingredients),
+    path('api/user_ingredient/<str:user_id>/<int:ingredient_id>/', views.user_ingredient),
+    path('api/recipe_ingredients/<int:recipe_id>/', views.recipe_ingredients),
     path('api/recipe_ingredient/', views.recipe_ingredient),
-    path('api/recipe_steps/', views.recipe_steps),
+    path('api/recipe_steps/<int:recipe_id>/', views.recipe_steps),
     path('api/recipe_step/', views.recipe_step),
 ]
